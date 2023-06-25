@@ -9,7 +9,7 @@ import time
 import re
 
 USER_LOGIN = '<YOUR LOGIN>'
-USER_PASSWORD = '<YOUR_PASSWORD>'
+USER_PASSWORD = '<YOUR PASSWORD>'
 
 
 def get_and_print_profile_info(driver, profile_url):
@@ -25,7 +25,7 @@ def get_and_print_profile_info(driver, profile_url):
     # that contains the name, company name, and the location
     intro = soup.find('div', {'class': 'pv-text-details__left-panel'})
 
-    #print(intro)
+    # print(intro)
 
     # In case of an error, try changing the tags used here.
     name_loc = intro.find("h1")
@@ -40,7 +40,7 @@ def get_and_print_profile_info(driver, profile_url):
     # Extracting the Company Name
     works_at = works_at_loc.get_text().strip()
 
-    print("Name -->",  name,
+    print("Name -->", name,
           "\nWorks At -->", works_at)
 
     POSTS_URL_SUFFIX = 'recent-activity/all/'
@@ -58,7 +58,7 @@ def get_and_print_profile_info(driver, profile_url):
 def get_and_print_user_posts(driver, posts_url):
     driver.get(posts_url)
 
-    #Simulate scrolling to capture all posts
+    # Simulate scrolling to capture all posts
     SCROLL_PAUSE_TIME = 1.5
 
     # Get scroll height
@@ -121,8 +121,6 @@ def get_and_print_user_posts(driver, posts_url):
     return
 
 
-
-
 if __name__ == '__main__':
     # start Chrome browser
     caps = DesiredCapabilities().CHROME
@@ -160,13 +158,13 @@ if __name__ == '__main__':
     # //tagname[@attribute='value']
     driver.find_element(By.XPATH, "//button[@type='submit']").click()
 
-    ### TEST for parsing page with posts
+    # TEST for parsing page with posts
     # get_and_print_profile_info(driver, 'https://www.linkedin.com/in/mathurin-ache-11004218')
 
     # exit()
 
     # Open search page
-    driver.get('https://www.linkedin.com/search/results/people/?keywords=data%20scientist&origin=CLUSTER_EXPANSION&sid=1gy')
+    driver.get('https://www.linkedin.com/search/results/people/?keywords=data%20scientist&origin=GLOBAL_SEARCH_HEADER&page=2&sid=jLQ')
 
     profile_urls = []
 
@@ -182,10 +180,32 @@ if __name__ == '__main__':
             if 'linkedin.com/in' in href:
                 profile_urls.append(href)
 
-        next_button = driver.find_element(By.CLASS_NAME,'artdeco-pagination__button--next')
+        # HACK TO SEE NEXT BUTTON BY SELENIUM
+        # We scroll down the page to make element visible for Selenium
+        SCROLL_PAUSE_TIME = 1
+
+        # Get scroll height
+        last_height = driver.execute_script("return document.body.scrollHeight")
+        driver.execute_script("document.body.style.zoom='10%'")
+        while True:
+            # Scroll down to bottom
+            driver.execute_script("window.scrollTo(0, (document.body.scrollHeight/2));")
+            # Wait to load page
+            time.sleep(SCROLL_PAUSE_TIME)
+            driver.execute_script("window.scrollTo(0, (document.body.scrollHeight));")
+            # Calculate new scroll height and compare with last scroll height
+            new_height = driver.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+            last_height = new_height
+
+        driver.execute_script("document.body.style.zoom='100%'")
+
+        next_button = driver.find_element(By.CLASS_NAME, 'artdeco-pagination__button--next')
+        # next_button = driver.find_element(By.XPATH,'//button[@aria-label="Next"]')
+
         next_button.click()
         time.sleep(2)
-
 
     profile_urls = list(set(profile_urls))
 
